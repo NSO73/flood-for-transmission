@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to build the release from (e.g. v1.0.2)'
+        required: true
 
 permissions:
   contents: write
@@ -16,12 +20,12 @@ jobs:
 
     steps:
       - name: Set tag var
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "tag_name=$TAG_NAME" >> $GITHUB_ENV
-      # Checks out a copy of your repository on the ubuntu-latest machine
+        run: echo "tag_name=${{ inputs.tag || github.ref_name }}" >> "$GITHUB_ENV"
+      # Checks out the tag (works for both tag-push and manual dispatch)
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: '${{ inputs.tag || github.ref_name }}'
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -53,6 +57,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: '${{ env.tag_name }}'
           name: '${{ env.tag_name }}'
           prerelease: false
           files: |
