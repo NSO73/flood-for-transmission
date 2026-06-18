@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   release:
     name: 'Release'
@@ -18,10 +21,7 @@ jobs:
           echo "tag_name=$TAG_NAME" >> $GITHUB_ENV
       # Checks out a copy of your repository on the ubuntu-latest machine
       - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          # Make sure the actual branch is checked out when running on pull requests
-          ref: ${{ github.head_ref }}
+        uses: actions/checkout@v4
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -51,11 +51,10 @@ jobs:
         run: tar -czvf flood-for-transmission.tar.gz flood-for-transmission
 
       - name: Release
-        uses: 'marvinpinto/action-automatic-releases@latest'
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: '${{ secrets.GITHUB_TOKEN }}'
+          name: '${{ env.tag_name }}'
           prerelease: false
-          title: '${{ env.tag_name }}'
           files: |
             flood-for-transmission.zip
             flood-for-transmission.tar.gz
